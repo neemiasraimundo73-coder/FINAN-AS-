@@ -33,7 +33,8 @@ class QueryBuilder {
         for (const item of this.payload) await addDoc(ref, { ...item, created_at: now(), updated_at: now() });
         return { data: this.payload, error: null };
       }
-      const snaps = await getDocs(query(ref));
+      const firestoreFilters = this.filters.filter(f => f.op === 'eq' || f.op === 'is' || f.op === 'gte' || f.op === 'lte').map(f => where(f.field, f.op === 'eq' || f.op === 'is' ? '==' : f.op, f.value));
+      const snaps = await getDocs(query(ref, ...firestoreFilters));
       let rows = snaps.docs.map(toData).filter(row => this.filters.every(f => {
         if (f.op === 'eq') return row[f.field] === f.value;
         if (f.op === 'is') return f.value === null ? row[f.field] == null : row[f.field] === f.value;

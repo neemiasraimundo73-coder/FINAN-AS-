@@ -125,7 +125,7 @@ function bindEvents() {
 async function boot() {
   bindEvents();
   if (!configured) { showAuthMessage('Configure o ficheiro config.js com o URL e a chave pública do Supabase para iniciar.'); $('login-form').querySelectorAll('input,button').forEach(x => x.disabled = true); $('register-form').querySelectorAll('input,button').forEach(x => x.disabled = true); return; }
-  const { data: { session } } = await supabase.auth.getSession(); if (session) { state.user = session.user; try { await loadWorkspace(); } catch (error) { console.error(error); showAuthMessage('Não foi possível carregar o espaço de trabalho.'); } }
-  supabase.auth.onAuthStateChange(async (_event, session) => { state.user = session?.user || null; if (state.user) { try { await loadWorkspace(); } catch (error) { console.error(error); } } else { $('app-view').hidden = true; $('auth-view').hidden = false; } });
+  const { data: { session } } = await supabase.auth.getSession(); if (session) { state.user = session.user; try { await loadWorkspace(); } catch (error) { console.error(error); showAuthMessage('A conta entrou, mas o banco Firestore ainda precisa das regras finais. Publique firestore.rules e tente novamente.'); } }
+  supabase.auth.onAuthStateChange(async (_event, session) => { state.user = session?.user || null; if (state.user) { try { await loadWorkspace(); } catch (error) { console.error(error); showAuthMessage('A conta foi reconhecida, mas o Firestore bloqueou os dados. Publique as regras finais e tente novamente.'); } } else { $('app-view').hidden = true; $('auth-view').hidden = false; } });
 }
 boot();
