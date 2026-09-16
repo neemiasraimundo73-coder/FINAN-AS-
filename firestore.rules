@@ -1,0 +1,123 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function member(orgId) {
+      return signedIn() && exists(/databases/$(database)/documents/organization_members/$(orgId + '_' + request.auth.uid));
+    }
+
+    function memberData(orgId) {
+      return get(/databases/$(database)/documents/organization_members/$(orgId + '_' + request.auth.uid)).data;
+    }
+
+    function activeMember(orgId) {
+      return member(orgId) && memberData(orgId).active == true;
+    }
+
+    function admin(orgId) {
+      return activeMember(orgId) && memberData(orgId).role == 'admin';
+    }
+
+    function writer(orgId) {
+      return activeMember(orgId) && (memberData(orgId).role == 'admin' || memberData(orgId).role == 'treasurer');
+    }
+
+    function validAmount(data) {
+      return data.amount_cents is int && data.amount_cents > 0;
+    }
+
+    function openDay(orgId, businessDate) {
+      return !exists(/databases/$(database)/documents/daily_closures/$(orgId + '_' + businessDate))
+        || get(/databases/$(database)/documents/daily_closures/$(orgId + '_' + businessDate)).data.status != 'closed';
+    }
+
+    match /profiles/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    match /organizations/{orgId} {
+      allow create: if signedIn() && request.resource.data.created_by == request.auth.uid;
+      allow read: if activeMember(orgId);
+      allow update: if admin(orgId);
+      allow delete: if false;
+    }
+
+    match /organization_members/{memberId} {
+      allow read: if signedIn() && (resource.data.user_id == request.auth.uid || admin(resource.data.organization_id));
+      allow create: if signedIn() && (request.resource.data.user_id == request.auth.uid || admin(request.resource.data.organization_id));
+      allow update: if admin(resource.data.organization_id);
+      allow delete: if false;
+    }
+
+    match /offerings/{entryId} {
+      allow read: if activeMember(resource.data.organization_id);
+      allow create: if writer(request.resource.data.organization_id)
+        && validAmount(request.resource.data)
+        && request.resource.data.business_date is string
+        && openDay(request.resource.data.organization_id, request.resource.data.business_date);
+      allow update: if writer(resource.data.organization_id)
+        && request.resource.data.organization_id == resource.data.organization_id
+        && validAmount(request.resource.data)
+        && openDay(resource.data.organization_id, resource.data.business_date);
+      allow delete: if false;
+    }
+
+    match /tithes/{entryId} {
+      allow read: if activeMember(resource.data.organization_id);
+      allow create: if writer(request.resource.data.organization_id)
+        && validAmount(request.resource.data)
+        && request.resource.data.delivery_date is string
+        && openDay(request.resource.data.organization_id, request.resource.data.delivery_date);
+      allow update: if writer(resource.data.organization_id)
+        && request.resource.data.organization_id == resource.data.organization_id
+        && validAmount(request.resource.data)
+        && openDay(resource.data.organization_id, resource.data.delivery_date);
+      allow delete: if false;
+    }
+
+    match /brothers/{brotherId} {
+      allow read: if activeMember(resource.data.organization_id);
+      allow create: if writer(request.resource.data.organization_id)
+        && request.resource.data.full_name is string;
+      allow update: if writer(resource.data.organization_id)
+        && request.resource.data.organization_id == resource.data.organization_id;
+      allow delete: if false;
+    }
+
+    match /daily_closures/{closureId} {
+      allow read: if activeMember(resource.data.organization_id);
+      allow create: if writer(request.resource.data.organization_id)
+        && request.resource.data.status == 'closed';
+      allow update: if admin(resource.data.organization_id);
+      allow delete: if false;
+    }
+
+    match /audit_events/{eventId} {
+      allow read: if admin(resource.data.organization_id);
+      allow create: if writer(request.resource.data.organization_id)
+        && request.resource.data.actor_id == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if activeMember(resource.data.organization_id);
+      allow create: if writer(request.resource.data.organization_id)
+        && request.resource.data.generated_by == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /backups/{backupId} {
+      allow read: if admin(resource.data.organization_id);
+      allow create: if admin(request.resource.data.organization_id)
+        && request.resource.data.created_by == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

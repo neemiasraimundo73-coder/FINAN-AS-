@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-MZ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12352f">
+  <meta name="description" content="Sistema financeiro da Igreja Evangélica Assembleia de Deus Alfa e Ómega — Sector 8">
+  <title>Alfa e Ómega — Gestão financeira</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="modules.css">
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <main id="auth-view" class="auth-layout">
+    <section class="auth-brand" aria-label="Identidade da igreja">
+      <div class="brand-mark large">AΩ</div>
+      <p class="eyebrow">Alfa e Ómega · Sector 8</p>
+      <h1>Gestão financeira com clareza e confiança.</h1>
+      <p class="brand-copy">Registos protegidos, sincronizados e prontos para apoiar o trabalho da igreja.</p>
+      <div class="security-note"><span aria-hidden="true">✓</span> Dados protegidos por autenticação e permissões</div>
+    </section>
+    <section class="auth-card-wrap">
+      <div class="auth-card">
+        <div class="mobile-brand"><div class="brand-mark">AΩ</div><span>Alfa e Ómega</span></div>
+        <div id="auth-tabs" class="auth-tabs" role="tablist" aria-label="Acesso">
+          <button class="tab-button active" data-auth-mode="login" role="tab" aria-selected="true">Entrar</button>
+          <button class="tab-button" data-auth-mode="register" role="tab" aria-selected="false">Criar conta</button>
+        </div>
+        <div id="auth-message" class="form-message" role="alert" hidden></div>
+        <form id="login-form" class="auth-form" novalidate>
+          <div class="field"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="email" required placeholder="nome@exemplo.com"></div>
+          <div class="field"><label for="login-password">Palavra-passe</label><input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="Mínimo de 8 caracteres"></div>
+          <button class="button primary full" type="submit">Entrar <span aria-hidden="true">→</span></button>
+          <button id="forgot-password" class="link-button" type="button">Esqueci a minha palavra-passe</button>
+        </form>
+        <form id="register-form" class="auth-form" hidden novalidate>
+          <div class="field"><label for="register-name">Nome completo</label><input id="register-name" name="name" autocomplete="name" required placeholder="Nome e apelido"></div>
+          <div class="field"><label for="register-email">E-mail</label><input id="register-email" name="email" type="email" autocomplete="email" required placeholder="nome@exemplo.com"></div>
+          <div class="field"><label for="register-password">Palavra-passe</label><input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Mínimo de 8 caracteres"></div>
+          <div class="field"><label for="register-confirm">Confirmar palavra-passe</label><input id="register-confirm" name="confirm" type="password" autocomplete="new-password" required minlength="8"></div>
+          <p class="field-hint">A primeira conta será encaminhada para a configuração segura da igreja. Nenhuma conta administrativa é criada silenciosamente.</p>
+          <button class="button primary full" type="submit">Criar conta <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="auth-footnote">Acesso privado para utilizadores autorizados.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="app-view" hidden>
+    <aside id="sidebar" class="sidebar" aria-label="Navegação principal">
+      <div class="sidebar-head"><div class="brand-mark">AΩ</div><div><strong>Alfa e Ómega</strong><span>Sector 8</span></div><button id="close-sidebar" class="icon-button mobile-only" aria-label="Fechar menu">×</button></div>
+      <nav class="main-nav">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">⌂</span> Visão geral</button>
+        <button class="nav-item" data-view="offerings"><span class="nav-icon">＋</span> Ofertas</button>
+        <button class="nav-item" data-view="tithes"><span class="nav-icon">◈</span> Dízimos</button>
+        <button class="nav-item" data-view="brothers"><span class="nav-icon">♙</span> Irmãos</button>
+        <button class="nav-item" data-view="day"><span class="nav-icon">▣</span> Registros por dia</button>
+        <button class="nav-item" data-view="calendar"><span class="nav-icon">▦</span> Calendário</button>
+        <button class="nav-item" data-view="closures"><span class="nav-icon">✓</span> Fechos diários</button>
+        <button class="nav-item" data-view="reports"><span class="nav-icon">▤</span> Relatórios</button>
+        <button class="nav-item admin-only" data-view="admin" hidden><span class="nav-icon">⚙</span> Administração</button>
+      </nav>
+      <div class="sidebar-bottom"><div class="sync-status"><span class="status-dot"></span><span id="sync-label">Ligado e sincronizado</span></div><button id="logout-button" class="nav-item subtle"><span class="nav-icon">↪</span> Terminar sessão</button></div>
+    </aside>
+    <div id="mobile-overlay" class="mobile-overlay" hidden></div>
+    <section class="content-shell">
+      <header class="topbar"><button id="open-sidebar" class="icon-button mobile-only" aria-label="Abrir menu">☰</button><div class="breadcrumb"><span>Alfa e Ómega</span><b>/</b><strong id="page-title">Visão geral</strong></div><div class="topbar-actions"><button id="theme-toggle" class="icon-button" aria-label="Alternar tema">☼</button><div class="user-chip"><div id="user-avatar" class="avatar">—</div><div><strong id="user-name">Utilizador</strong><span id="user-role">A carregar</span></div></div></div></header>
+      <main id="page-content" class="page-content"></main>
+    </section>
+  </div>
+
+  <dialog id="setup-dialog" class="modal-dialog" aria-labelledby="setup-title">
+    <form id="setup-form" class="modal-card" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">Configuração inicial</p><h2 id="setup-title">Registe a sua igreja</h2></div></div>
+      <p class="muted">Este passo cria o espaço seguro da igreja e confirma a sua conta como administrador principal.</p>
+      <div class="field"><label for="setup-name">Nome da igreja</label><input id="setup-name" required value="Igreja Evangélica Assembleia de Deus Alfa e Ómega"></div>
+      <div class="form-grid"><div class="field"><label for="setup-sector">Sector</label><input id="setup-sector" required value="8"></div><div class="field"><label for="setup-currency">Moeda</label><select id="setup-currency"><option value="MZN">MZN — Metical</option><option value="AOA">AOA — Kwanza</option><option value="ZAR">ZAR — Rand</option><option value="USD">USD — Dólar</option></select></div></div>
+      <div class="field"><label for="setup-address">Endereço <span class="optional">opcional</span></label><input id="setup-address"></div>
+      <div id="setup-message" class="form-message" role="alert" hidden></div>
+      <button class="button primary full" type="submit">Guardar e entrar</button>
+    </form>
+  </dialog>
+
+  <dialog id="entry-dialog" class="modal-dialog" aria-labelledby="entry-title">
+    <form id="entry-form" class="modal-card" method="dialog">
+      <div class="modal-head"><div><p id="entry-kicker" class="eyebrow">Novo lançamento</p><h2 id="entry-title">Registar</h2></div><button type="button" class="icon-button" data-close-dialog="entry-dialog" aria-label="Fechar">×</button></div>
+      <input id="entry-id" type="hidden"><input id="entry-type" type="hidden">
+      <div id="entry-fields"></div>
+      <div id="entry-message" class="form-message" role="alert" hidden></div>
+      <div class="modal-actions"><button type="button" class="button secondary" data-close-dialog="entry-dialog">Cancelar</button><button class="button primary" type="submit">Guardar lançamento</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="brother-dialog" class="modal-dialog" aria-labelledby="brother-title">
+    <form id="brother-form" class="modal-card" method="dialog"><div class="modal-head"><div><p class="eyebrow">Cadastro</p><h2 id="brother-title">Novo irmão</h2></div><button type="button" class="icon-button" data-close-dialog="brother-dialog" aria-label="Fechar">×</button></div><input id="brother-id" type="hidden"><div class="field"><label for="brother-name">Nome completo</label><input id="brother-name" required></div><div class="field"><label for="brother-phone">Telefone <span class="optional">opcional</span></label><input id="brother-phone" type="tel"></div><div class="field"><label for="brother-notes">Observações <span class="optional">opcional</span></label><textarea id="brother-notes" rows="3"></textarea></div><div id="brother-message" class="form-message" role="alert" hidden></div><div class="modal-actions"><button type="button" class="button secondary" data-close-dialog="brother-dialog">Cancelar</button><button class="button primary" type="submit">Guardar irmão</button></div></form>
+  </dialog>
+</body>
+</html>
